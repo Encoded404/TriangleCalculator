@@ -224,23 +224,39 @@ namespace TrekantCalculator
         }
         static Triangle trySolveAnglesWithSinusRule(Triangle triangle)
         {
-            if(triangle.A == null || triangle.a == null) { Console.WriteLine("something went wrong when calculating you triangle angles, please try again and fix any potential errors"); return triangle; }
+            int index = 0;
+            bool foundCalculation = getOpositeValues(triangle, out index);
 
-            if(triangle.b != null)
+            if(!foundCalculation) { return triangle; }
+
+            if(index == 2) { triangle.rotateCounterClockWise(); }
+            else if(index == 3) { triangle.rotateClockWise(); }
+            
+            try
             {
-                double A = (double)triangle.A;
-                double b = (double)triangle.b;
-                double a = (double)triangle.a;
-                double tempInRadians = Math.Asin((b * Math.Sin(A * DEG_TO_RAD)) / a); // Input angle converted to radians.
-                triangle.B = tempInRadians * RAD_TO_DEG; // Result converted back to degrees.
+                if(triangle.A == null || triangle.a == null) { Console.WriteLine("something went wrong when calculating you triangle angles, please try again and fix any potential errors"); return triangle; }
+
+                if(triangle.b != null)
+                {
+                    double A = (double)triangle.A;
+                    double b = (double)triangle.b;
+                    double a = (double)triangle.a;
+                    double tempInRadians = Math.Asin((b * Math.Sin(A * DEG_TO_RAD)) / a); // Input angle converted to radians.
+                    triangle.B = tempInRadians * RAD_TO_DEG; // Result converted back to degrees.
+                }
+                if(triangle.c != null)
+                {
+                    double A = (double)triangle.A;
+                    double c = (double)triangle.c;
+                    double a = (double)triangle.a;
+                    double tempInRadians = Math.Asin((c * Math.Sin(A * DEG_TO_RAD)) / a); // Input angle converted to radians.
+                    triangle.C = tempInRadians * RAD_TO_DEG; // Result converted back to degrees.
+                }
             }
-            if(triangle.c != null)
+            finally
             {
-                double A = (double)triangle.A;
-                double c = (double)triangle.c;
-                double a = (double)triangle.a;
-                double tempInRadians = Math.Asin((c * Math.Sin(A * DEG_TO_RAD)) / a); // Input angle converted to radians.
-                triangle.C = tempInRadians * RAD_TO_DEG; // Result converted back to degrees.
+                if(index == 2) { triangle.rotateClockWise(); }
+                else if(index == 3) { triangle.rotateCounterClockWise(); }
             }
 
             return triangle;
@@ -342,11 +358,7 @@ namespace TrekantCalculator
         {
             if(isTriangleSolved(triangle)) { return triangle; }
 
-            int index = 0;
             //if(!getOpositeValues(triangle, out index)) { Console.WriteLine("triangle can't be solved with the sinus rule"); return triangle; }
-
-            if(index == 2) { triangle.rotateCounterClockWise(); }
-            else if(index == 3) { triangle.rotateClockWise(); }
 
             bool isRight = IsRightAngleTriangle(triangle) == 0 ? false : true;
 
@@ -382,9 +394,6 @@ namespace TrekantCalculator
 
                 if(hasChangedCounter >= 3) { Console.WriteLine("unable to solve triangle any more"); break; }
             }
-
-            if(index == 2) { triangle.rotateClockWise(); }
-            else if(index == 3) { triangle.rotateCounterClockWise(); }
 
             return triangle;
         }
@@ -447,12 +456,13 @@ namespace TrekantCalculator
 
     public class CalculatorApp
     {
-        static Dictionary<string, SingleQuestion> questions = new();
+        static Dictionary<string, SingleQuestion>? questions;
         static bool shouldRun = true;
         static void Main()
         {
             while(shouldRun)
             {
+                questions = new Dictionary<string, SingleQuestion>();
                 questions.Add("A", new SingleQuestion("A", 0, valueType.angle));
                 questions.Add("a", new SingleQuestion("a", 0, valueType.distance));
                 questions.Add("B", new SingleQuestion("B", 0, valueType.angle));
@@ -491,6 +501,8 @@ namespace TrekantCalculator
             bool isCorrect = false;
             while (!isCorrect)
             {
+                if(questions == null) { return; }
+
                 getSingleTriangleValues();
 
                 PrintTriangle(new Triangle(questions));
@@ -514,6 +526,8 @@ namespace TrekantCalculator
 
         static void getSingleTriangleValues()
         {
+            if(questions == null) { return; }
+
             foreach(KeyValuePair<string, SingleQuestion> pair in questions)
             {
                 string? value = null;
